@@ -12,7 +12,14 @@ class Story {
    *   - {title, author, url, username, storyId, createdAt}
    */
 
-  constructor({ storyId, title, author, url, username, createdAt }) {
+  constructor({
+    storyId,
+    title,
+    author,
+    url,
+    username,
+    createdAt
+  }) {
     this.storyId = storyId;
     this.title = title;
     this.author = author;
@@ -25,7 +32,8 @@ class Story {
 
   getHostName() {
     // UNIMPLEMENTED: complete this function!
-    return "hostname.com";
+    const urlObj = new URL(this.url);
+    return urlObj.hostname;
   }
 }
 
@@ -73,10 +81,49 @@ class StoryList {
    * Returns the new Story instance
    */
 
-  async addStory( /* user, newStory */) {
-    // UNIMPLEMENTED: complete this function!
+  async addStory(user, {
+    title,
+    author,
+    url
+  }) {
+
+    const token = user.loginToken;
+    const res = await axios({
+      method: "POST",
+      url: `${BASE_URL}/stories`,
+      data: {
+        token,
+        story: {
+          title,
+          author,
+          url
+        }
+      },
+    });
+
+    const story = new Story(res.data.story);
+    this.stories.unshift(story);
+    user.ownStories.unshift(story);
+    console.log(story);
+    return story;
   }
+
+  async removeStory(user, storyId) {
+    const token = user.loginToken;
+    await axios({
+      url: `${BASE_URL}/stories/${storyId}`,
+      method: "DELETE",
+      data: {
+        token
+      }
+    });
+    this.stories = this.stories.filter(story => story.storyId !== storyId);
+    user.ownStories = user.ownStories.filter(s => s.storyId !== storyId);
+    user.favorites = user.favorites.filter(s => s.storyId !== storyId);
+  }
+
 }
+
 
 
 /******************************************************************************
@@ -90,13 +137,13 @@ class User {
    */
 
   constructor({
-                username,
-                name,
-                createdAt,
-                favorites = [],
-                ownStories = []
-              },
-              token) {
+      username,
+      name,
+      createdAt,
+      favorites = [],
+      ownStories = []
+    },
+    token) {
     this.username = username;
     this.name = name;
     this.createdAt = createdAt;
@@ -120,13 +167,20 @@ class User {
     const response = await axios({
       url: `${BASE_URL}/signup`,
       method: "POST",
-      data: { user: { username, password, name } },
+      data: {
+        user: {
+          username,
+          password,
+          name
+        }
+      },
     });
 
-    let { user } = response.data
+    let {
+      user
+    } = response.data
 
-    return new User(
-      {
+    return new User({
         username: user.username,
         name: user.name,
         createdAt: user.createdAt,
@@ -147,13 +201,19 @@ class User {
     const response = await axios({
       url: `${BASE_URL}/login`,
       method: "POST",
-      data: { user: { username, password } },
+      data: {
+        user: {
+          username,
+          password
+        }
+      },
     });
 
-    let { user } = response.data;
+    let {
+      user
+    } = response.data;
 
-    return new User(
-      {
+    return new User({
         username: user.username,
         name: user.name,
         createdAt: user.createdAt,
@@ -173,13 +233,16 @@ class User {
       const response = await axios({
         url: `${BASE_URL}/users/${username}`,
         method: "GET",
-        params: { token },
+        params: {
+          token
+        },
       });
 
-      let { user } = response.data;
+      let {
+        user
+      } = response.data;
 
-      return new User(
-        {
+      return new User({
           username: user.username,
           name: user.name,
           createdAt: user.createdAt,
@@ -192,5 +255,17 @@ class User {
       console.error("loginViaStoredCredentials failed", err);
       return null;
     }
+  }
+
+  async addFavorite(user, ) {
+    const token = user.loginToken;
+    const res = await axios({
+      url: `${BASE_URL}/users/${this.username}/favorites/${this.storyId}`,
+      method: "POST",
+      data: {
+        token
+      }
+    })
+    console.log(res);
   }
 }

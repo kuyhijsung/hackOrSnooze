@@ -25,6 +25,23 @@ function navLoginClick(evt) {
 
 $navLogin.on("click", navLoginClick);
 
+function storySubmitClick(evt) {
+  console.debug("storySubmitClick", evt);
+  hidePageComponents();
+  $submitStory.show();
+  $allStoriesList.show();
+}
+
+$submitStoryButton.on("click", storySubmitClick);
+
+function favoritesClick(evt) {
+  console.debug("favoritesClick", evt);
+  hidePageComponents();
+  $favoritesForm.show();
+  putFavoriteStoriesOnPage();
+}
+
+$favoritesBtn.on("click", favoritesClick);
 /** When a user first logins in, update the navbar to reflect that. */
 
 function updateNavOnLogin() {
